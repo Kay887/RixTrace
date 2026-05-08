@@ -540,7 +540,7 @@ function loadState(){
     STATE._cloudLoaded=p._cloudLoaded||false;
     // Restore tasks from localStorage ONLY if Supabase has never loaded
     // Once _cloudLoaded=true, Supabase always wins — localStorage is stale cache
-    if(!STATE._cloudLoaded && p.tasks) STATE.tasks=p.tasks;
+  if(p.tasks) STATE.tasks=p.tasks;
   }catch(e){}
 }
 
@@ -690,8 +690,7 @@ async function pullFromSupabase(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const rows=await r.json();
     if(rows.length>0){
-      // Supabase has data — it wins completely, reset task state from cloud
-      STATE.tasks={};
+      // Merge Supabase rows into existing state — never wipe first
       rows.forEach(row=>{
         if(!STATE.tasks[row.id])STATE.tasks[row.id]={};
         STATE.tasks[row.id].status=row.status||'Not Started';
@@ -1107,7 +1106,6 @@ function toggleOption(key){STATE.supabase[key]=!STATE.supabase[key];saveState();
 // Clear localStorage task cache — forces fresh pull from Supabase next load
 function clearLocalCache(){
   STATE._cloudLoaded=false;
-  STATE.tasks={};
   try{localStorage.removeItem(STORE_KEY);}catch(e){}
   seedMissingTasks();
   toast('Cache cleared — reconnect to sync from Supabase','info');
@@ -1133,9 +1131,10 @@ renderCurrentPage();
 // This ensures Supabase is always the source of truth
 if(STATE.supabase.url && STATE.supabase.anonKey){
   setTimeout(async()=>{
+    const badge=document.getElementById('sync-status-badge');
+    if(badge) badge.textContent='↓ syncing…';
     if(STATE.syncStatus !== 'connected') await testConnection();
     else await pullFromSupabase();
-    // Always start realtime if connected
     if(STATE.syncStatus === 'connected') startRealtime();
   }, 600);
 }
