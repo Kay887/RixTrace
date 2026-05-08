@@ -772,7 +772,7 @@ function renderDashboard(){
     <div class="metrics-grid">
       <div class="metric g"><div class="metric-lbl">Overall progress</div><div class="metric-val">${prog}%</div><div class="metric-sub">${done}/${total} tasks done</div></div>
       <div class="metric a"><div class="metric-lbl">Hours logged</div><div class="metric-val">${lh}</div><div class="metric-sub">of ~${th}h total</div></div>
-      <div class="metric b"><div class="metric-lbl">In progress</div><div class="metric-val">${inProgCount()}</div><div class="metric-sub">active tasks</div></div>
+      <div class="metric b" onclick="gotoPage('tasks');taskStatusF='In Progress';" style="cursor:pointer" title="Click to view active tasks"><div class="metric-lbl">In progress ↗</div><div class="metric-val">${inProgCount()}</div><div class="metric-sub">click to view</div></div>
       <div class="metric r"><div class="metric-lbl">Blocked</div><div class="metric-val">${blockedCount()}</div><div class="metric-sub">need resolution</div></div>
       <div class="metric p"><div class="metric-lbl">Phases done</div><div class="metric-val">${phDone}<span style="font-size:14px;color:var(--textm)">/${PHASES.length}</span></div><div class="metric-sub">complete</div></div>
     </div>
