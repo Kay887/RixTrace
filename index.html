@@ -605,7 +605,7 @@ function startRealtime(){
 }
 
 function stopRealtime(){clearTimeout(_reconnectTimer);stopHeartbeat();if(_ws){_ws.onclose=null;try{_ws.close(1000,'User closed');}catch(e){}_ws=null;}STATE.supabase.realtimeEnabled=false;updateRTPill('off');rtAddLog('Stopped by user','sys');if(currentPage==='settings')renderCurrentPage();}
-function joinChannel(table){const ref=String(++_wsRef);wsSend({topic:'realtime:*',event:'phx_join',payload:{config:{broadcast:{self:false},presence:{key:''},postgres_changes:[{event:'*',schema:'public',table:table}]}},ref:ref,join_ref:ref});rtAddLog(`Subscribed: public.${table} (all events)`,'sys');}
+function joinChannel(table){const ref=String(++_wsRef);wsSend({topic: `realtime:public:${table}`,event:'phx_join',payload:{config:{broadcast:{self:false},presence:{key:''},postgres_changes:[{event:'*',schema:'public',table:table}]}},ref:ref,join_ref:ref});rtAddLog(`Subscribed: public.${table} (all events)`,'sys');}
 function startHeartbeat(){stopHeartbeat();_heartbeatTimer=setInterval(()=>{wsSend({topic:'phoenix',event:'heartbeat',payload:{},ref:String(++_wsRef)});},25000);}
 function stopHeartbeat(){if(_heartbeatTimer){clearInterval(_heartbeatTimer);_heartbeatTimer=null;}}
 function wsSend(obj){if(_ws&&_ws.readyState===WebSocket.OPEN)_ws.send(JSON.stringify(obj));}
@@ -1133,11 +1133,10 @@ renderCurrentPage();
 // This ensures Supabase is always the source of truth
 if(STATE.supabase.url && STATE.supabase.anonKey){
   setTimeout(async()=>{
-    await testConnection();  // testConnection auto-pulls on success
-    // Start realtime after connection if previously enabled
-    if(STATE.supabase.realtimeEnabled && STATE.syncStatus==='connected'){
-      startRealtime();
-    }
+    if(STATE.syncStatus !== 'connected') await testConnection();
+    else await pullFromSupabase();
+    // Always start realtime if connected
+    if(STATE.syncStatus === 'connected') startRealtime();
   }, 600);
 }
 </script>
